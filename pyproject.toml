@@ -1,17 +1,39 @@
 [build-system]
-requires = ["setuptools>=61.0"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
 
 [project]
 name = "s4-nnx"
 version = "0.1.0"
-description = "Minimal s4-nnx package scaffold"
+description = "A minimal S4 implementation for Flax NNX."
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.11"
 license = { text = "MIT" }
-authors = [{ name = "s4-nnx contributors" }]
-dependencies = []
+
+dependencies = [
+    "jax>=0.7.2,<0.8",
+    "flax>=0.11.2,<0.12",
+]
+
+[project.optional-dependencies]
+train = [
+    "optax>=0.2.8,<0.3",
+    "tqdm>=4.67,<5",
+]
+
+examples = [
+    "numpy>=2.4,<3",
+    "scipy>=1.16,<2",
+    "matplotlib>=3.10,<4",
+]
+
+dev = [
+    "pytest>=8",
+    "ruff>=0.12",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/s4_nnx"]
 
 [tool.pytest.ini_options]
-pythonpath = ["src"]
 testpaths = ["tests"]
