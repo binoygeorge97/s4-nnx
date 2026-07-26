@@ -8,32 +8,57 @@ version = "0.1.0"
 description = "A minimal S4 implementation for Flax NNX."
 readme = "README.md"
 requires-python = ">=3.11"
-license = { text = "MIT" }
+license = { file = "LICENSE" }
+authors = [
+    { name = "Binoy" }
+]
+keywords = [
+    "jax",
+    "flax",
+    "nnx",
+    "s4",
+    "state-space-model",
+    "sequence-modeling",
+    "system-identification"
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence"
+]
 
 dependencies = [
     "jax>=0.7.2,<0.8",
-    "flax>=0.11.2,<0.12",
+    "flax>=0.11.2,<0.12"
 ]
 
 [project.optional-dependencies]
 train = [
     "optax>=0.2.8,<0.3",
-    "tqdm>=4.67,<5",
+    "tqdm>=4.67,<5"
 ]
-
-examples = [
-    "numpy>=2.4,<3",
-    "scipy>=1.16,<2",
-    "matplotlib>=3.10,<4",
-]
-
 dev = [
+    "build>=1.2",
+    "optax>=0.2.8,<0.3",
     "pytest>=8",
     "ruff>=0.12",
+    "tqdm>=4.67,<5"
 ]
+
+[project.urls]
+Repository = "https://github.com/binoygeorge97/s4-nnx"
+Issues = "https://github.com/binoygeorge97/s4-nnx/issues"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/s4_nnx"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
