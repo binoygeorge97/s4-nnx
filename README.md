@@ -1,30 +1,38 @@
 # S4 for Flax NNX
 
-A minimal implementation of the Structured State Space Sequence model (S4) using the Flax NNX API.
+A minimal implementation of the Structured State Space Sequence model (S4)
+using the Flax NNX API.
 
-This package focuses on providing an NNX-compatible S4 implementation rather than introducing a new S4 architecture. It uses:
+This repository does **not** introduce a new S4 algorithm. Its purpose is to
+provide an NNX-compatible implementation with:
 
-* `flax.nnx.Module` and `flax.nnx.Param`
-* explicit recurrent-state input and output
-* convolutional and recurrent execution modes
-* JAX transformations such as `jit`, `vmap`, and `lax.scan`
-* a small stacked regression model for sequence-to-sequence prediction
+- `flax.nnx.Module` and `flax.nnx.Param`
+- explicit recurrent-state input and output
+- convolutional training mode and recurrent inference mode
+- JAX transformations such as `jit`, `vmap`, and `lax.scan`
+- a small sequence-to-sequence regression wrapper
 
 ## Installation
 
-Install directly from GitHub:
+From the repository root:
 
 ```bash
-pip install "s4-nnx @ git+https://github.com/YOUR_USERNAME/s4-nnx.git"
-```
-
-For development:
-
-```bash
-git clone https://github.com/YOUR_USERNAME/s4-nnx.git
-cd s4-nnx
 pip install -e .
 ```
+
+Install the optional training dependencies:
+
+```bash
+pip install -e ".[train]"
+```
+
+After pushing the repository to GitHub, it can also be installed with:
+
+```bash
+pip install "s4-nnx @ git+https://github.com/YOUR_GITHUB_USERNAME/s4-nnx.git"
+```
+
+Replace `YOUR_GITHUB_USERNAME` in this README and in `pyproject.toml`.
 
 ## Basic usage
 
@@ -45,23 +53,24 @@ config = S4Config(
 
 model = create_model(config, seed=0)
 
-x = jnp.ones((100, 9))
-states = model.init_state()
+inputs = jnp.ones((100, 9))
+outputs, states = model(inputs, training=False)
 
-y, new_states = model(
-    x,
-    states=states,
-    training=False,
-)
-
-print(y.shape)
+print(outputs.shape)       # (100, 6)
+print(states[0].shape)     # (16, 32)
 ```
+
+Convolution mode currently expects the sequence length to equal `l_max`.
 
 ## Recurrent inference
 
-Set `decode=True` to use the recurrent S4 realization:
+Set `decode=True` and pass the returned states into the next call:
 
 ```python
+import jax.numpy as jnp
+
+from s4_nnx import S4Config, create_model
+
 config = S4Config(
     d_input=9,
     d_output=6,
@@ -75,41 +84,64 @@ config = S4Config(
 model = create_model(config, seed=0)
 states = model.init_state()
 
-z_k = jnp.ones((1, 9))
-
-x_next, states = model(
-    z_k,
-    states=states,
-    training=False,
-)
+z_k = jnp.ones(9)
+x_next, states = model(z_k, states=states, training=False)
 ```
 
-The recurrent state is passed explicitly rather than stored and mutated inside the module.
+The recurrent state is passed explicitly. The model does not mutate a hidden
+state stored inside the module.
+
+## Existing research-code names
+
+The shorter public names and your existing class names are both available:
+
+| Short name | Existing name |
+|---|---|
+| `S4Layer` | `S4LayerEnsemble` |
+| `S4Block` | `SequenceBlockNNX` |
+| `S4Regressor` | `StackedModelRegression` |
+
+## Batched training
+
+The model's direct call accepts one sequence with shape `(L, d_input)`.
+Use `nnx.vmap` to run a shared model over a batch. See
+[`examples/regression.py`](examples/regression.py).
 
 ## Tested environment
 
-The current implementation has been tested on Kaggle with:
+The implementation was run on Kaggle with:
 
-| Library    | Version |
-| ---------- | ------: |
-| JAX        |   0.7.2 |
-| Flax       |  0.11.2 |
-| Optax      |   0.2.8 |
-| NumPy      |   2.4.6 |
-| SciPy      |  1.16.3 |
-| Matplotlib |  3.10.0 |
-| tqdm       |  4.67.3 |
+| Library | Version |
+|---|---:|
+| JAX | 0.7.2 |
+| Flax | 0.11.2 |
+| Optax | 0.2.8 |
+| tqdm | 4.67.3 |
+| Matplotlib | 3.10.0 |
+| NumPy | 2.4.6 |
+| SciPy | 1.16.3 |
 
-## Scope
+The exact environment is recorded in `requirements-kaggle.txt`. The core
+package itself only imports JAX and Flax.
 
-The package contains the reusable S4 model implementation.
+## Run the tests
 
-Dataset generation, system-identification experiments, controller training, and application-specific code are intentionally kept outside the core package.
+```bash
+pip install -e ".[dev]"
+pytest
+```
+
+## Acknowledgment
+
+The S4/HiPPO/DPLR mathematics is adapted from the MIT-licensed
+`srush/annotated-s4` implementation. The main purpose of this repository is
+the Flax NNX port and explicit recurrent-state interface.
 
 ## Status
 
-This is an early research release. The public API and checkpoint format may change before version 1.0.
+This is an early research release. The API and checkpoint format may change
+before version 1.0.
 
 ## License
 
-MIT
+MIT. See `LICENSE`.
